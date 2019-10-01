@@ -1,0 +1,52 @@
+#include <math.h>
+
+static double xPosition = 0.0;
+static double yPosition = 0.0;
+static double angle = 0.0;
+
+static int position();
+
+int main(){
+  vex::task::positionTracking(position);
+  
+  while(true){
+    int leftSpeed = int(MainUser.Axis3.position(vex::percentUnits::pct)) + ((MainUser.Axis1.position(vex::percentUnits::pct)) + (MainUser.Axis2.position(vex::percentUnits::pct)));
+    int rightSpeed = int(MainUser.Axis3.position(vex::percentUnits::pct)) - ((MainUser.Axis1.position(vex::percentUnits::pct)) + (MainUser.Axis2.position(vex::percentUnits::pct)));
+      
+    if(leftSpeed > 10 || leftSpeed < -10){
+      mtrLChassis.spin(vex::directionType::fwd,leftSpeedMainUser,vex::velocityUnits::pct);
+    }
+    else{
+      mtrLChassis.spin(vex::directionType::fwd,0,vex::velocityUnits::pct);
+    }
+        
+    if(rightSpeed > 10 or rightSpeed < -10){
+      mtrRChassis.spin(vex::directionType::fwd,rightSpeedMainUser,vex::velocityUnits::pct);
+    }
+    else{
+      mtrRChassis.spin(vex::directionType::fwd,0,vex::velocityUnits::pct);
+    }
+  }
+}
+
+static int position(){
+  double oldR = 0.0;
+  double oldL = 0.0;
+  while(true){
+    double encRVal = encR.rotation(rotationUnits::deg) - oldR;
+    double encLVal = encL.rotation(rotationUnits::deg) - oldL;
+    
+    double encDist = (encRVal + encLVal)/2.0;
+    double encTheta = (encRVal - encLVal)/2.0;
+    
+    double deltaDist = (M_PI * encDist)/(90.0);
+    double deltaTheta = (30.0 * encTheta)/(M_PI);
+    
+    angle += deltaTheta;
+    xPosition += deltaDist * cos((angle * M_PI)/180.0);
+    yPosition += deltaDist * sin((angle * M_PI)/180.0);
+    
+    oldR = encRVal + oldR;
+    oldL = encLVal + oldL;
+  }
+}
